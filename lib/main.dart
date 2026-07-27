@@ -1236,21 +1236,21 @@ class _MapPageState extends State<MapPage> {
           ?place wdt:P571 ?inception .
           OPTIONAL { ?place wikibase:sitelinks ?sitelinks . }
           OPTIONAL { ?place wdt:P18 ?image . }
-          OPTIONAL { ?place schema:description ?description . FILTER(LANG(?description) = "zh" || LANG(?description) = "en") }
+          OPTIONAL { ?place schema:description ?description . FILTER(LANG(?description) = "en" || LANG(?description) = "zh") }
           OPTIONAL {
             {
               ?article schema:about ?place .
-              ?article schema:isPartOf <https://zh.wikipedia.org/> .
+              ?article schema:isPartOf <https://en.wikipedia.org/> .
             } UNION {
               ?article schema:about ?place .
-              ?article schema:isPartOf <https://en.wikipedia.org/> .
+              ?article schema:isPartOf <https://zh.wikipedia.org/> .
               FILTER NOT EXISTS {
                 ?otherArticle schema:about ?place .
-                ?otherArticle schema:isPartOf <https://zh.wikipedia.org/> .
+                ?otherArticle schema:isPartOf <https://en.wikipedia.org/> .
               }
             }
           }
-          SERVICE wikibase:label { bd:serviceParam wikibase:language "zh,en,fr,de". }
+          SERVICE wikibase:label { bd:serviceParam wikibase:language "en,zh,fr,de". }
         }
         ORDER BY ?distance
         LIMIT 150
