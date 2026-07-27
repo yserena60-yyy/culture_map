@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(flutter analyze *)",
+      "PowerShell(cd c:\\\\Users\\\\phwan\\\\Desktop\\\\culture_map; flutter analyze 2>&1 | Where-Object { $_ -match 'error' })"
+    ]
+  }
+}
