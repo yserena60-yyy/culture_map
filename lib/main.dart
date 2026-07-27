@@ -1318,11 +1318,7 @@ class _MapPageState extends State<MapPage> {
           }
           ?place wdt:P571 ?inception .
           OPTIONAL { ?place wikibase:sitelinks ?sitelinks . }
-          OPTIONAL {
-            SELECT ?place (SAMPLE(?type) AS ?instance) WHERE {
-              ?place wdt:P31 ?type .
-            } GROUP BY ?place
-          }
+          OPTIONAL { ?place wdt:P31 ?instance . }
           OPTIONAL { ?place wdt:P18 ?image . }
           OPTIONAL { ?place schema:description ?description . FILTER(LANG(?description) = "en" || LANG(?description) = "zh") }
           OPTIONAL {
@@ -1358,12 +1354,49 @@ class _MapPageState extends State<MapPage> {
       final data = jsonDecode(response.body);
       final bindings = data['results']['bindings'] as List;
 
+      // P31 (instance-of) is multi-valued, so the same place can appear in
+      // multiple rows with different type labels (and duplicated article /
+      // image / description values). Collect the best value per field for
+      // each entity first, then dedupe rows by entity below.
+      final Map<String, List<String>> typeLabelsByEntity = {};
+      final Map<String, String> articleByEntity = {};
+      final Map<String, String> imageByEntity = {};
+      final Map<String, String> descriptionByEntity = {};
+      final Map<String, String> sitelinksByEntity = {};
+      for (var item in bindings) {
+        final placeUrl = item['place']['value'] as String;
+        final entityId = placeUrl.split('/').last;
+        final label = item['instanceLabel']?['value'] as String?;
+        if (label != null) {
+          typeLabelsByEntity.putIfAbsent(entityId, () => []).add(label);
+        }
+        final article = item['article']?['value'] as String?;
+        if (article != null) articleByEntity[entityId] = article;
+        final image = item['image']?['value'] as String?;
+        if (image != null) imageByEntity[entityId] = image;
+        final description = item['description']?['value'] as String?;
+        if (description != null) descriptionByEntity[entityId] = description;
+        final sitelinksStr = item['sitelinks']?['value'] as String?;
+        if (sitelinksStr != null) sitelinksByEntity[entityId] = sitelinksStr;
+      }
+
+      String? bestTypeLabel(String entityId) {
+        final labels = typeLabelsByEntity[entityId];
+        if (labels == null || labels.isEmpty) return null;
+        for (final label in labels) {
+          if (_iconForPlaceType(label) != Icons.account_balance) return label;
+        }
+        return labels.first;
+      }
+
       final List<WikiPlace> places = [];
+      final Set<String> seenEntityIds = {};
       for (var item in bindings) {
         final title = item['placeLabel']['value'];
         final placeUrl = item['place']['value'];
         final entityId = placeUrl.split('/').last;
-        final articleUrl = item['article']?['value'];
+        if (!seenEntityIds.add(entityId)) continue;
+        final articleUrl = articleByEntity[entityId];
 
         final coordsStr = item['coords']['value'] as String;
         final match = RegExp(r'point\(\s*([^\s)]+)\s+([^\s)]+)\s*\)',
@@ -1388,13 +1421,13 @@ class _MapPageState extends State<MapPage> {
           continue;
         }
 
-        final sitelinksStr = item['sitelinks']?['value'];
+        final sitelinksStr = sitelinksByEntity[entityId];
         final sitelinks =
             sitelinksStr != null ? int.tryParse(sitelinksStr) ?? 0 : 0;
 
         // Get basic Wikidata image and description
-        String? imageUrl = item['image']?['value'];
-        String? description = item['description']?['value'];
+        String? imageUrl = imageByEntity[entityId];
+        String? description = descriptionByEntity[entityId];
 
         // Fetch detailed content from Wikipedia API if article URL exists
         if (articleUrl != null) {
@@ -1415,12 +1448,10 @@ class _MapPageState extends State<MapPage> {
           }
         }
 
-        final instanceLabel = item['instanceLabel']?['value'];
-
         places.add(WikiPlace(
           entityId: entityId,
           title: title,
-          type: instanceLabel,
+          type: bestTypeLabel(entityId),
           lat: lat,
           lng: lng,
           numericYear: numericYear,
