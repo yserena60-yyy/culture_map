@@ -3,7 +3,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'solitude_explorer_theme.dart';
-import 'navigation_page.dart';
 import 'comments_page.dart';
 
 class LandmarkPreviewCard extends StatefulWidget {
@@ -202,13 +201,92 @@ class _LandmarkPreviewCardState extends State<LandmarkPreviewCard> {
 
   void _navigateToLocation() {
     if (widget.latitude != null && widget.longitude != null) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => NavigationPage(
-            destinationName: widget.name,
-            destinationLat: widget.latitude!,
-            destinationLng: widget.longitude!,
+      showModalBottomSheet(
+        context: context,
+        backgroundColor: Colors.transparent,
+        builder: (context) => Container(
+          decoration: BoxDecoration(
+            color: SolitudeExplorerTheme.stainedPaper,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            border: Border.all(color: SolitudeExplorerTheme.stainedPaperEdge, width: 2),
+          ),
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Navigation Options',
+                style: GoogleFonts.cinzel(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: SolitudeExplorerTheme.inkBlack,
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // Show route on map
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    if (widget.onNavigateTap != null) {
+                      widget.onNavigateTap!();
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: SolitudeExplorerTheme.compassGold,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                  icon: const Icon(Icons.map, size: 20),
+                  label: Text(
+                    'Show Route on Map',
+                    style: GoogleFonts.crimsonText(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 12),
+
+              // Open in Google Maps
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    final url = Uri.parse(
+                      'https://www.google.com/maps/dir/?api=1&destination=${widget.latitude},${widget.longitude}',
+                    );
+                    launchUrl(url, mode: LaunchMode.externalApplication);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: SolitudeExplorerTheme.burgundyRed,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                  icon: const Icon(Icons.open_in_new, size: 20),
+                  label: Text(
+                    'Open in Google Maps',
+                    style: GoogleFonts.crimsonText(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       );

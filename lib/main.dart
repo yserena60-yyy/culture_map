@@ -1096,6 +1096,11 @@ class _MapPageState extends State<MapPage> {
   int _currentRouteStep = 0;
   bool _mapControllerReady = false;
 
+  // Navigation route on map
+  List<LatLng> _navigationRoute = [];
+  WikiPlace? _navigationDestination;
+  bool _showOnlyDestination = false;
+
   bool _isCreatingRoute = false;
   String _newRouteName = '';
   String _newRouteDesc = '';
@@ -1220,6 +1225,51 @@ class _MapPageState extends State<MapPage> {
     });
     FocusScope.of(context).unfocus();
     _searchWikidataNearby(newCenter);
+  }
+
+  Future<void> _fetchRouteToPlace(WikiPlace place) async {
+    if (_currentLocation == null) {
+      await _locateUser();
+      if (_currentLocation == null) return;
+    }
+
+    try {
+      final startLat = _currentLocation!.latitude;
+      final startLng = _currentLocation!.longitude;
+      final endLat = place.lat;
+      final endLng = place.lng;
+
+      final url = Uri.parse(
+        'https://router.project-osrm.org/route/v1/foot/$startLng,$startLat;$endLng,$endLat?overview=full&geometries=geojson',
+      );
+
+      final response = await http.get(url);
+      if (response.statusCode != 200) return;
+
+      final data = jsonDecode(response.body);
+      final coords = data['routes'][0]['geometry']['coordinates'] as List;
+
+      setState(() {
+        _navigationRoute = coords.map((c) => LatLng(c[1], c[0])).toList();
+        _navigationDestination = place;
+      });
+
+      // Zoom to show the route
+      _mapController.move(
+        LatLng((startLat + endLat) / 2, (startLng + endLng) / 2),
+        13.0,
+      );
+    } catch (e) {
+      debugPrint('Error fetching route: $e');
+    }
+  }
+
+  void _clearRoute() {
+    setState(() {
+      _navigationRoute = [];
+      _navigationDestination = null;
+      _showOnlyDestination = false;
+    });
   }
 
   Future<void> _searchWikidataNearby(LatLng center) async {
@@ -1450,6 +1500,10 @@ class _MapPageState extends State<MapPage> {
                   ),
                 ),
               );
+            },
+            onNavigateTap: () {
+              Navigator.pop(ctx);
+              _fetchRouteToPlace(wikiPlace);
             },
           ),
         ),
@@ -2170,9 +2224,17 @@ class _MapPageState extends State<MapPage> {
   @override
   Widget build(BuildContext context) {
     final filteredWikiMarkers = _wikiPlaces
-        .where((p) =>
-            p.numericYear >= _yearRange.start &&
-            p.numericYear <= _yearRange.end)
+        .where((p) {
+          // Filter by year range
+          if (p.numericYear < _yearRange.start || p.numericYear > _yearRange.end) {
+            return false;
+          }
+          // If showing only destination, filter out other places
+          if (_showOnlyDestination && _navigationDestination != null) {
+            return p.entityId == _navigationDestination!.entityId;
+          }
+          return true;
+        })
         .map((p) => Marker(
               point: LatLng(p.lat, p.lng),
               width: 80,
@@ -2375,6 +2437,19 @@ class _MapPageState extends State<MapPage> {
                         _activeRoute!.steps.map((s) => s.location).toList(),
                     color: _activeRoute!.color,
                     strokeWidth: 4.0,
+                  ),
+                ],
+              ),
+            // Navigation route overlay
+            if (_navigationRoute.isNotEmpty)
+              PolylineLayer<Object>(
+                polylines: [
+                  Polyline(
+                    points: _navigationRoute,
+                    color: SolitudeExplorerTheme.compassGold,
+                    strokeWidth: 5.0,
+                    borderStrokeWidth: 2.0,
+                    borderColor: SolitudeExplorerTheme.inkBlack,
                   ),
                 ],
               ),
@@ -2664,7 +2739,7 @@ class _MapPageState extends State<MapPage> {
 
         // Search area button
         Positioned(
-          bottom: 143, // Moved down - smaller value = lower position
+          bottom: 143,
           right: 16,
           child: GestureDetector(
             onTap: _loadingWiki
@@ -2718,6 +2793,72 @@ class _MapPageState extends State<MapPage> {
             ),
           ),
         ),
+
+        // Navigation controls (show when route is active)
+        if (_navigationRoute.isNotEmpty) ...[
+          // Clear route button
+          Positioned(
+            bottom: 200,
+            right: 16,
+            child: GestureDetector(
+              onTap: _clearRoute,
+              child: Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: SolitudeExplorerTheme.burgundyRed,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: SolitudeExplorerTheme.stainedPaperEdge, width: 2),
+                  boxShadow: [
+                    BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.2),
+                        blurRadius: 8)
+                  ],
+                ),
+                child: const Icon(
+                  Icons.close,
+                  size: 24,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
+          // Toggle all places / destination only
+          Positioned(
+            bottom: 260,
+            right: 16,
+            child: GestureDetector(
+              onTap: () {
+                setState(() {
+                  _showOnlyDestination = !_showOnlyDestination;
+                });
+              },
+              child: Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: _showOnlyDestination
+                      ? SolitudeExplorerTheme.compassGold
+                      : SolitudeExplorerTheme.stainedPaper,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: SolitudeExplorerTheme.stainedPaperEdge, width: 2),
+                  boxShadow: [
+                    BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.2),
+                        blurRadius: 8)
+                  ],
+                ),
+                child: Icon(
+                  _showOnlyDestination ? Icons.location_on : Icons.map,
+                  size: 24,
+                  color: _showOnlyDestination
+                      ? Colors.white
+                      : SolitudeExplorerTheme.inkBlack,
+                ),
+              ),
+            ),
+          ),
+        ],
 
         // Bottom card (time slider or route tour)
         Positioned(
