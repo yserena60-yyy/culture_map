@@ -2143,10 +2143,37 @@ class _MapPageState extends State<MapPage> {
     );
   }
 
+  // Convert slider position (0-1) to actual year with non-linear mapping
+  double _sliderToYear(double sliderValue) {
+    // Slider range: 0.0 to 1.0
+    // Time periods with different scaling:
+    // - Ancient (3000BC-1800AD): compressed to 0.0-0.6 (4800 years in 60% of slider)
+    // - Modern (1800AD-2026AD): expanded to 0.6-1.0 (226 years in 40% of slider)
+
+    if (sliderValue <= 0.6) {
+      // Ancient period: -3000 to 1800
+      return -3000 + (sliderValue / 0.6) * 4800;
+    } else {
+      // Modern period: 1800 to 2026
+      return 1800 + ((sliderValue - 0.6) / 0.4) * 226;
+    }
+  }
+
+  // Convert actual year to slider position (0-1)
+  double _yearToSlider(double year) {
+    if (year <= 1800) {
+      // Ancient period: -3000 to 1800
+      return ((year + 3000) / 4800) * 0.6;
+    } else {
+      // Modern period: 1800 to 2026
+      return 0.6 + ((year - 1800) / 226) * 0.4;
+    }
+  }
+
   Widget _buildTimeDimensionCard() {
     final s = AppLocalizations.of(context)!;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10), // Reduced from 16 to 10
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
         color: SolitudeExplorerTheme.stainedPaper,
         borderRadius: BorderRadius.circular(20),
@@ -2205,13 +2232,18 @@ class _MapPageState extends State<MapPage> {
               rangeThumbShape: const RoundRangeSliderThumbShape(enabledThumbRadius: 10),
             ),
             child: RangeSlider(
-              values: _yearRange,
-              min: -3000,
-              max: 2026,
-              onChanged: (RangeValues values) {
+              values: RangeValues(
+                _yearToSlider(_yearRange.start),
+                _yearToSlider(_yearRange.end),
+              ),
+              min: 0.0,
+              max: 1.0,
+              onChanged: (RangeValues sliderValues) {
                 setState(() {
                   _yearRange = RangeValues(
-                      values.start.roundToDouble(), values.end.roundToDouble());
+                    _sliderToYear(sliderValues.start).roundToDouble(),
+                    _sliderToYear(sliderValues.end).roundToDouble(),
+                  );
                 });
               },
             ),
