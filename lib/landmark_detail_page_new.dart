@@ -1,4 +1,7 @@
+import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -44,12 +47,48 @@ class _LandmarkDetailPageNewState extends State<LandmarkDetailPageNew> {
   final TextEditingController _commentController = TextEditingController();
   final TextEditingController _storyController = TextEditingController();
   bool _isSubmitting = false;
+  XFile? _selectedCommentImage;
 
   @override
   void dispose() {
     _commentController.dispose();
     _storyController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickCommentImage() async {
+    try {
+      final picker = ImagePicker();
+      final pickedFile = await picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1600,
+        imageQuality: 85,
+      );
+      if (pickedFile != null) {
+        setState(() => _selectedCommentImage = pickedFile);
+      }
+    } catch (e) {
+      debugPrint('Error picking comment image: $e');
+    }
+  }
+
+  Future<String?> _uploadCommentImage(XFile imageFile, String userId) async {
+    try {
+      final fileName = '${userId}_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final filePath = 'comments/$fileName';
+
+      final bytes = await imageFile.readAsBytes();
+      await Supabase.instance.client.storage
+          .from('user-content')
+          .uploadBinary(filePath, bytes);
+
+      return Supabase.instance.client.storage
+          .from('user-content')
+          .getPublicUrl(filePath);
+    } catch (e) {
+      debugPrint('Error uploading comment image: $e');
+      return null;
+    }
   }
 
   Future<void> _submitRating() async {
@@ -75,12 +114,18 @@ class _LandmarkDetailPageNewState extends State<LandmarkDetailPageNew> {
     setState(() => _isSubmitting = true);
 
     try {
+      String? imageUrl;
+      if (_selectedCommentImage != null) {
+        imageUrl = await _uploadCommentImage(_selectedCommentImage!, user.id);
+      }
+
       // Insert comment into Supabase
       final commentData = <String, dynamic>{
         'user_id': user.id,
         'content': _commentController.text.trim(),
         'rating': _selectedRating,
         'place_name': widget.name, // Save place name
+        'image_url': imageUrl,
         'created_at': DateTime.now().toIso8601String(),
       };
 
@@ -100,6 +145,7 @@ class _LandmarkDetailPageNewState extends State<LandmarkDetailPageNew> {
         setState(() {
           _selectedRating = 0;
           _commentController.clear();
+          _selectedCommentImage = null;
         });
       }
     } catch (e) {
@@ -420,6 +466,56 @@ class _LandmarkDetailPageNewState extends State<LandmarkDetailPageNew> {
                             ),
                             filled: true,
                             fillColor: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        if (_selectedCommentImage != null) ...[
+                          Stack(
+                            alignment: Alignment.topRight,
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(10),
+                                child: kIsWeb
+                                    ? Image.network(
+                                        _selectedCommentImage!.path,
+                                        height: 140,
+                                        width: double.infinity,
+                                        fit: BoxFit.cover,
+                                      )
+                                    : Image.file(
+                                        File(_selectedCommentImage!.path),
+                                        height: 140,
+                                        width: double.infinity,
+                                        fit: BoxFit.cover,
+                                      ),
+                              ),
+                              IconButton(
+                                onPressed: () =>
+                                    setState(() => _selectedCommentImage = null),
+                                icon: const Icon(Icons.close, color: Colors.white),
+                                style: IconButton.styleFrom(
+                                  backgroundColor: Colors.black.withValues(alpha: 0.5),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                        ],
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: OutlinedButton.icon(
+                            onPressed: _pickCommentImage,
+                            icon: const Icon(Icons.image_outlined, size: 18),
+                            label: Text(_selectedCommentImage == null
+                                ? 'Add Photo'
+                                : 'Change Photo'),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: SolitudeExplorerTheme.compassGold,
+                              side: BorderSide(color: SolitudeExplorerTheme.compassGold),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
                           ),
                         ),
                         const SizedBox(height: 12),

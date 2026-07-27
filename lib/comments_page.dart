@@ -22,6 +22,8 @@ class CommentsPage extends StatefulWidget {
 class _CommentsPageState extends State<CommentsPage> {
   List<Map<String, dynamic>> _comments = [];
   bool _isLoading = true;
+  double? _averageRating;
+  int _ratingCount = 0;
 
   @override
   void initState() {
@@ -62,9 +64,20 @@ class _CommentsPageState extends State<CommentsPage> {
           .eq(idColumn, identifier)
           .order('created_at', ascending: false);
 
+      final comments = List<Map<String, dynamic>>.from(response);
+      final ratings = comments
+          .map((c) => c['rating'] as int?)
+          .whereType<int>()
+          .toList();
+      final avgRating = ratings.isEmpty
+          ? null
+          : ratings.reduce((a, b) => a + b) / ratings.length;
+
       if (mounted) {
         setState(() {
-          _comments = List<Map<String, dynamic>>.from(response);
+          _comments = comments;
+          _averageRating = avgRating;
+          _ratingCount = ratings.length;
           _isLoading = false;
         });
       }
@@ -123,12 +136,30 @@ class _CommentsPageState extends State<CommentsPage> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                Text(
-                  '${_comments.length} ${_comments.length == 1 ? 'comment' : 'comments'}',
-                  style: GoogleFonts.crimsonText(
-                    fontSize: 14,
-                    color: SolitudeExplorerTheme.fadedInk,
-                  ),
+                Row(
+                  children: [
+                    Text(
+                      '${_comments.length} ${_comments.length == 1 ? 'comment' : 'comments'}',
+                      style: GoogleFonts.crimsonText(
+                        fontSize: 14,
+                        color: SolitudeExplorerTheme.fadedInk,
+                      ),
+                    ),
+                    if (_averageRating != null) ...[
+                      const SizedBox(width: 10),
+                      const Icon(Icons.star,
+                          size: 15, color: SolitudeExplorerTheme.compassGold),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${_averageRating!.toStringAsFixed(1)} ($_ratingCount)',
+                        style: GoogleFonts.crimsonText(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: SolitudeExplorerTheme.inkBlack,
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               ],
             ),
@@ -175,6 +206,7 @@ class _CommentsPageState extends State<CommentsPage> {
   Widget _buildCommentCard(Map<String, dynamic> comment) {
     final rating = comment['rating'] as int?;
     final content = comment['content'] as String? ?? '';
+    final imageUrl = comment['image_url'] as String?;
     final createdAt = DateTime.parse(comment['created_at']);
     final formattedDate = '${createdAt.year}-${createdAt.month.toString().padLeft(2, '0')}-${createdAt.day.toString().padLeft(2, '0')}';
 
@@ -228,6 +260,19 @@ class _CommentsPageState extends State<CommentsPage> {
                 fontSize: 15,
                 color: SolitudeExplorerTheme.inkBlack,
                 height: 1.5,
+              ),
+            ),
+          ],
+          if (imageUrl != null && imageUrl.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Image.network(
+                imageUrl,
+                height: 180,
+                width: double.infinity,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => const SizedBox.shrink(),
               ),
             ),
           ],

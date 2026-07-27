@@ -2831,7 +2831,7 @@ class _MapPageState extends State<MapPage> {
         if (_navigationRoute.isNotEmpty) ...[
           // Clear route button
           Positioned(
-            bottom: 200,
+            bottom: 264,
             right: 16,
             child: GestureDetector(
               onTap: _clearRoute,
@@ -2858,7 +2858,7 @@ class _MapPageState extends State<MapPage> {
           ),
           // Toggle all places / destination only
           Positioned(
-            bottom: 260,
+            bottom: 324,
             right: 16,
             child: GestureDetector(
               onTap: () {

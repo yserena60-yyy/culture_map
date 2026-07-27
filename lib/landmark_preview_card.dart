@@ -46,6 +46,8 @@ class _LandmarkPreviewCardState extends State<LandmarkPreviewCard> {
   bool _isLoading = false;
   List<Map<String, dynamic>> _recentComments = [];
   int _totalComments = 0;
+  double? _averageRating;
+  int _ratingCount = 0;
 
   @override
   void initState() {
@@ -108,15 +110,25 @@ class _LandmarkPreviewCardState extends State<LandmarkPreviewCard> {
           .from('comments')
           .select()
           .eq(idColumn, identifier)
-          .order('created_at', ascending: false)
-          .limit(3);
+          .order('created_at', ascending: false);
 
       debugPrint('Comments loaded: ${response.length} comments found');
 
+      final allComments = List<Map<String, dynamic>>.from(response);
+      final ratings = allComments
+          .map((c) => c['rating'] as int?)
+          .whereType<int>()
+          .toList();
+      final avgRating = ratings.isEmpty
+          ? null
+          : ratings.reduce((a, b) => a + b) / ratings.length;
+
       if (mounted) {
         setState(() {
-          _recentComments = List<Map<String, dynamic>>.from(response);
-          _totalComments = _recentComments.length;
+          _recentComments = allComments.take(3).toList();
+          _totalComments = allComments.length;
+          _averageRating = avgRating;
+          _ratingCount = ratings.length;
         });
       }
     } catch (e) {
@@ -379,8 +391,10 @@ class _LandmarkPreviewCardState extends State<LandmarkPreviewCard> {
           ),
           const SizedBox(height: 14),
 
-          // Category and year badges
-          Row(
+          // Category, year and rating badges
+          Wrap(
+            spacing: 10,
+            runSpacing: 8,
             children: [
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
@@ -406,7 +420,6 @@ class _LandmarkPreviewCardState extends State<LandmarkPreviewCard> {
                   ],
                 ),
               ),
-              const SizedBox(width: 10),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                 decoration: BoxDecoration(
@@ -430,6 +443,31 @@ class _LandmarkPreviewCardState extends State<LandmarkPreviewCard> {
                   ],
                 ),
               ),
+              if (_averageRating != null)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: SolitudeExplorerTheme.stainedPaperEdge),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.star,
+                          size: 15, color: SolitudeExplorerTheme.compassGold),
+                      const SizedBox(width: 5),
+                      Text(
+                        '${_averageRating!.toStringAsFixed(1)} ($_ratingCount)',
+                        style: GoogleFonts.crimsonText(
+                          fontSize: 13,
+                          color: SolitudeExplorerTheme.inkBlack,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
             ],
           ),
 
@@ -458,106 +496,130 @@ class _LandmarkPreviewCardState extends State<LandmarkPreviewCard> {
           // Comments preview section
           if (_recentComments.isNotEmpty) ...[
             const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: SolitudeExplorerTheme.compassGold.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: SolitudeExplorerTheme.compassGold.withValues(alpha: 0.3),
-                  width: 1,
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.rate_review,
-                        size: 16,
-                        color: SolitudeExplorerTheme.compassGold,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        'Recent Comments ($_totalComments)',
-                        style: GoogleFonts.crimsonText(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: SolitudeExplorerTheme.inkBlack,
-                        ),
-                      ),
-                    ],
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => CommentsPage(
+                      placeName: widget.name,
+                      placeId: widget.placeId,
+                      wikidataEntityId: widget.wikidataEntityId,
+                    ),
                   ),
-                  const SizedBox(height: 12),
-                  ...List.generate(
-                    _recentComments.length > 2 ? 2 : _recentComments.length,
-                    (index) {
-                      final comment = _recentComments[index];
-                      final rating = comment['rating'] as int?;
-                      final content = comment['content'] as String? ?? '';
+                );
+              },
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: SolitudeExplorerTheme.compassGold.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: SolitudeExplorerTheme.compassGold.withValues(alpha: 0.3),
+                    width: 1,
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.rate_review,
+                          size: 16,
+                          color: SolitudeExplorerTheme.compassGold,
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            'Recent Comments ($_totalComments)',
+                            style: GoogleFonts.crimsonText(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: SolitudeExplorerTheme.inkBlack,
+                            ),
+                          ),
+                        ),
+                        Icon(
+                          Icons.chevron_right,
+                          size: 18,
+                          color: SolitudeExplorerTheme.fadedInk,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    ...List.generate(
+                      _recentComments.length > 2 ? 2 : _recentComments.length,
+                      (index) {
+                        final comment = _recentComments[index];
+                        final rating = comment['rating'] as int?;
+                        final content = comment['content'] as String? ?? '';
+                        final imageUrl = comment['image_url'] as String?;
 
-                      return Padding(
-                        padding: EdgeInsets.only(bottom: index < 1 && _recentComments.length > 1 ? 10 : 0),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            if (rating != null)
-                              Row(
-                                children: List.generate(
-                                  rating,
-                                  (i) => const Icon(
-                                    Icons.star,
-                                    size: 12,
-                                    color: SolitudeExplorerTheme.compassGold,
+                        return Padding(
+                          padding: EdgeInsets.only(bottom: index < 1 && _recentComments.length > 1 ? 10 : 0),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (imageUrl != null && imageUrl.isNotEmpty) ...[
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(6),
+                                  child: Image.network(
+                                    imageUrl,
+                                    width: 36,
+                                    height: 36,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (_, __, ___) => const SizedBox.shrink(),
                                   ),
                                 ),
-                              ),
-                            if (rating != null) const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                content.isEmpty ? 'No comment text' : content,
-                                style: GoogleFonts.crimsonText(
-                                  fontSize: 12,
-                                  color: SolitudeExplorerTheme.fadedInk,
-                                  height: 1.4,
+                                const SizedBox(width: 8),
+                              ],
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    if (rating != null)
+                                      Row(
+                                        children: List.generate(
+                                          rating,
+                                          (i) => const Icon(
+                                            Icons.star,
+                                            size: 12,
+                                            color: SolitudeExplorerTheme.compassGold,
+                                          ),
+                                        ),
+                                      ),
+                                    if (rating != null) const SizedBox(height: 4),
+                                    Text(
+                                      content.isEmpty ? 'No comment text' : content,
+                                      style: GoogleFonts.crimsonText(
+                                        fontSize: 12,
+                                        color: SolitudeExplorerTheme.fadedInk,
+                                        height: 1.4,
+                                      ),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
                                 ),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
                               ),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-                  if (_totalComments > 2) ...[
-                    const SizedBox(height: 8),
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => CommentsPage(
-                              placeName: widget.name,
-                              placeId: widget.placeId,
-                              wikidataEntityId: widget.wikidataEntityId,
-                            ),
+                            ],
                           ),
                         );
                       },
-                      child: Text(
-                        'View all comments',
-                        style: GoogleFonts.crimsonText(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: SolitudeExplorerTheme.compassGold,
-                          decoration: TextDecoration.underline,
-                        ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'View all comments',
+                      style: GoogleFonts.crimsonText(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: SolitudeExplorerTheme.compassGold,
+                        decoration: TextDecoration.underline,
                       ),
                     ),
                   ],
-                ],
+                ),
               ),
             ),
           ],
