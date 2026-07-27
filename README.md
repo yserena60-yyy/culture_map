@@ -1,121 +1,131 @@
-# Culture Map - 历史文化地图导航应用
+# Culture Map - Historical Cultural Heritage Explorer
 
-一个基于Flutter开发的历史文化遗产探索应用，具有完整的GPS导航功能。
+A Flutter-based historical cultural heritage exploration app with complete GPS navigation features.
 
-## ✨ 核心功能
+## ✨ Core Features
 
-### 📍 地图探索
-- 显示全球历史文化遗产地标
-- 集成Wikidata数据源
-- 从Wikipedia获取真实内容和图片
-- 复古羊皮纸风格UI设计
+### 📍 Map Exploration
+- Display global historical and cultural heritage landmarks
+- Integrated Wikidata data source
+- Fetch real content and images from Wikipedia
+- Vintage parchment-style UI design
 
-### 🧭 完整导航系统
-- **三种导航模式**：步行 🚶 / 骑行 🚴 / 驾车 🚗
-- **实时GPS定位**：高精度跟踪，5米更新
-- **真实路线规划**：使用OSRM API获取真实道路
-- **转弯提示**：中文语音播报（向左转、向右转等）
-- **地图自动旋转**：Heading-up模式，地图跟随朝向
-- **语音导航**：全程中文TTS语音指引
-- **屏幕常亮**：导航期间自动保持屏幕亮
+### 🧭 Complete Navigation System
+- **Three Navigation Modes**: Walking 🚶 / Cycling 🚴 / Driving 🚗
+- **Real-time GPS Positioning**: High-precision tracking, updates every 5 meters
+- **Real Route Planning**: Uses OSRM API to fetch actual roads
+- **Turn-by-turn Guidance**: Voice prompts (turn left, turn right, etc.)
+- **Auto Map Rotation**: Heading-up mode, map follows your orientation
+- **Voice Navigation**: Full voice guidance via TTS
+- **Screen Wakelock**: Auto keep screen on during navigation
 
-### 🎨 UI设计
-- 复古羊皮纸主题（"百年孤独"风格）
-- Crimson Text字体（正文）
-- Cinzel字体（标题）
-- 勃艮第红 + 金色配色方案
+### 🎨 UI Design
+- Vintage parchment theme (inspired by "One Hundred Years of Solitude")
+- Crimson Text font (body text)
+- Cinzel font (titles)
+- Burgundy red + gold color scheme
 
-### 💾 后端功能
-- Supabase用户认证
-- 书签收藏系统
-- 评论系统
-- 离线地图下载
+### 💾 Backend Features
+- Supabase user authentication
+- Bookmark collection system
+- Comment system
+- User profile management
 
-## 🚀 快速开始
+### 📱 User Features
+- Rate and review landmarks
+- View community comments
+- Save favorite places
+- Track exploration statistics
+- Level progression system
 
-### 环境要求
+## 🚀 Quick Start
+
+### Requirements
 - Flutter SDK >=3.0.0
 - Android Studio / Xcode
-- Android 设备（用于完整导航功能）
+- Android device (for full navigation features)
 
-### 安装依赖
+### Install Dependencies
 ```bash
 flutter pub get
 ```
 
-### 运行应用
+### Run the App
 ```bash
-# Web预览（导航功能受限）
+# Web preview (limited navigation)
 flutter run -d chrome
 
-# Android手机（完整功能）
+# Android phone (full features)
 flutter run
 ```
 
-### 编译APK
+### Build APK
 ```bash
 flutter build apk --release
 ```
 
-## 📦 主要依赖
+## 📦 Main Dependencies
 
-| 包名 | 用途 |
+| Package | Purpose |
 |-----|------|
-| flutter_map | 地图显示 |
-| geolocator | GPS定位 |
-| flutter_tts | 语音播报 |
-| wakelock_plus | 屏幕常亮 |
-| supabase_flutter | 后端服务 |
-| google_fonts | 字体支持 |
-| http | API请求 |
+| flutter_map | Map display |
+| geolocator | GPS positioning |
+| flutter_tts | Voice prompts |
+| wakelock_plus | Screen wakelock |
+| supabase_flutter | Backend service |
+| google_fonts | Font support |
+| http | API requests |
+| image_picker | Profile photo upload |
+| cached_network_image | Image caching |
 
-## 📱 权限说明
+## 📱 Permissions
 
-应用需要以下权限：
-- **位置** - GPS导航必需
-- **后台位置** - 持续导航
-- **网络** - 加载地图和数据
-- **屏幕常亮** - 导航期间保持亮屏
+The app requires the following permissions:
+- **Location** - Required for GPS navigation
+- **Background Location** - For continuous navigation
+- **Network** - Load maps and data
+- **Screen Wakelock** - Keep screen on during navigation
+- **Storage** - Save profile photos (mobile only)
 
-## 🗺️ 导航功能详解
+## 🗺️ Navigation Features
 
-### 使用流程
-1. 在地图上点击地标卡片
-2. 点击"Navigate"按钮
-3. 选择导航模式（步行/骑行/驾车）
-4. 跟随地图和语音指示
+### Usage Flow
+1. Tap a landmark card on the map
+2. Click the "Navigate" button
+3. Choose navigation mode (walking/cycling/driving)
+4. Follow the map and voice instructions
 
-### 功能特点
-- ✅ 实时位置更新（每5米）
-- ✅ 真实道路路线规划
-- ✅ 中文转弯指示
-- ✅ 提前50-100米语音提醒
-- ✅ 到达50米内通知
-- ✅ 预计到达时间计算
-- ✅ 指南针方向指示
+### Key Features
+- ✅ Real-time position updates (every 5 meters)
+- ✅ Real road route planning
+- ✅ Turn-by-turn instructions
+- ✅ Voice alerts 50-100 meters in advance
+- ✅ Arrival notification within 50 meters
+- ✅ Estimated arrival time calculation
+- ✅ Compass direction indicator
 
-详细功能说明：[NAVIGATION_FEATURES.md](NAVIGATION_FEATURES.md)  
-测试指南：[NAVIGATION_TEST_GUIDE.md](NAVIGATION_TEST_GUIDE.md)
-
-## 📂 项目结构
+## 📂 Project Structure
 
 ```
 lib/
-├── main.dart                          # 主应用入口，地图页面
-├── navigation_page.dart               # 导航页面（核心功能）
-├── landmark_preview_card.dart         # 地标卡片组件
-├── landmark_detail_page_new.dart      # 地标详情页
-├── solitude_explorer_theme.dart       # 主题配置
-└── ...
-
-android/
-└── app/src/main/AndroidManifest.xml   # Android权限配置
+├── main.dart                          # Main app entry, map page
+├── navigation_page.dart               # Navigation page (core feature)
+├── landmark_preview_card.dart         # Landmark card component
+├── landmark_detail_page_new.dart      # Landmark detail page
+├── my_drafts_page.dart                # User contributions page
+├── saved_places_page.dart             # Saved places page
+├── edit_profile_page.dart             # Profile editing page
+├── comments_page.dart                 # Comments view page
+├── solitude_explorer_theme.dart       # Theme configuration
+└── l10n/                              # Localization files
+    ├── app_en.arb                     # English translations
+    └── app_zh.arb                     # Chinese translations
 ```
 
-## 🔧 配置说明
+## 🔧 Configuration
 
-### Supabase配置
-在`lib/main.dart`中配置你的Supabase项目：
+### Supabase Setup
+Configure your Supabase project in `lib/main.dart`:
 ```dart
 await Supabase.initialize(
   url: 'YOUR_SUPABASE_URL',
@@ -123,60 +133,82 @@ await Supabase.initialize(
 );
 ```
 
-### 地图瓦片
-默认使用OpenStreetMap：
+### Map Tiles
+Uses OpenStreetMap by default:
 ```dart
 urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
 ```
 
-### 路线API
-使用OSRM免费API：
+### Routing API
+Uses free OSRM API:
 ```
 https://router.project-osrm.org/route/v1/{profile}/...
 ```
 
-## ⚠️ 重要说明
+## 🌐 Internationalization
 
-### Web浏览器限制
-- ❌ 无法获取真实GPS位置
-- ❌ 无法获取设备朝向
-- ❌ 地图旋转功能无效
+The app supports multiple languages and automatically adapts to your device's system language:
+- English (en)
+- Chinese (zh)
 
-**结论：导航功能必须在Android/iOS设备上运行！**
+All UI text is localized, including:
+- Navigation instructions
+- Menu items
+- Buttons and labels
+- Error messages
+- Level titles
 
-### 手机要求
-- ✅ 需要GPS硬件
-- ✅ 需要指南针传感器
-- ✅ 需要网络连接
-- ✅ 建议在户外测试（GPS信号）
+To add a new language, create a new `.arb` file in `lib/l10n/` directory.
 
-## 🐛 故障排除
+## ⚠️ Important Notes
 
-### GPS无法定位
-1. 确认GPS已开启
-2. 到户外空旷地方
-3. 检查应用位置权限
+### Web Browser Limitations
+- ❌ Cannot get real GPS position
+- ❌ Cannot get device orientation
+- ❌ Map rotation feature unavailable
 
-### 路线无法规划
-1. 检查网络连接
-2. 确认目的地不要太近（>100米）
+**Conclusion: Navigation features require Android/iOS device!**
 
-### 语音不播报
-1. 检查音量设置
-2. 确认语音开关开启（右上角🔊）
+### Device Requirements
+- ✅ GPS hardware required
+- ✅ Compass sensor required
+- ✅ Network connection required
+- ✅ Recommended to test outdoors (GPS signal)
+
+## 🐛 Troubleshooting
+
+### GPS Not Working
+1. Confirm GPS is enabled
+2. Go to an open outdoor area
+3. Check app location permissions
+
+### Route Planning Failed
+1. Check network connection
+2. Ensure destination is not too close (>100m)
+
+### Voice Not Working
+1. Check volume settings
+2. Ensure voice toggle is on (top-right 🔊)
+
+## 🚀 Deployment
+
+This app is deployed on GitHub Pages at:
+https://yserena60-yyy.github.io/culture_map/
+
+The deployment is automated via GitHub Actions on every push to the main branch.
 
 ## 📄 License
 
 MIT License
 
-## 👥 贡献
+## 👥 Contributing
 
-欢迎提交Issue和Pull Request！
+Issues and Pull Requests are welcome!
 
-## 📞 联系方式
+## 📞 Contact
 
-如有问题或建议，请通过Issue反馈。
+For questions or suggestions, please submit an Issue.
 
 ---
 
-**享受你的文化探索之旅！** 🗺️✨
+**Enjoy your cultural exploration journey!** 🗺️✨

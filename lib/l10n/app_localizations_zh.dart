@@ -305,4 +305,103 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get existingExplorer => '已有账号？直接登录';
+
+  @override
+  String get myDrafts => '我的动态与贡献';
+
+  @override
+  String get savedPlacesRoutes => '我的收藏地点与路线';
+
+  @override
+  String get editProfile => '编辑资料';
+
+  @override
+  String get settings => '设置';
+
+  @override
+  String get searchArea => '搜索区域';
+
+  @override
+  String get recentComments => '最近评论';
+
+  @override
+  String get viewAllComments => '查看全部评论';
+
+  @override
+  String get allComments => '全部评论';
+
+  @override
+  String get comments => '条评论';
+
+  @override
+  String get removeBookmark => '移除收藏';
+
+  @override
+  String get removeBookmarkConfirm => '确定要从收藏中移除这个地点吗？';
+
+  @override
+  String get remove => '移除';
+
+  @override
+  String get unknownPlace => '未知地点';
+
+  @override
+  String get noContributions => '暂无贡献记录';
+
+  @override
+  String get noSavedPlaces => '暂无收藏地点';
+
+  @override
+  String get name => '昵称';
+
+  @override
+  String get bio => '个人简介';
+
+  @override
+  String get changeAvatar => '更换头像';
+
+  @override
+  String get save => '保存';
+
+  @override
+  String get level => '等级';
+
+  @override
+  String get noviceExplorer => '初级探索家';
+
+  @override
+  String get apprenticeExplorer => '学徒探索家';
+
+  @override
+  String get journeymanExplorer => '熟练探索家';
+
+  @override
+  String get expertExplorer => '专家探索家';
+
+  @override
+  String get masterExplorer => '大师探索家';
+
+  @override
+  String get legendaryChronicler => '传奇记载者';
+
+  @override
+  String get rateExperience => '评价您的体验';
+
+  @override
+  String get rating => '评分';
+
+  @override
+  String get writeComment => '写下您的评论（可选）';
+
+  @override
+  String get submit => '提交';
+
+  @override
+  String get ratingSubmitted => '评价提交成功！';
+
+  @override
+  String get ratingFailed => '评价提交失败';
+
+  @override
+  String get close => '关闭';
 }

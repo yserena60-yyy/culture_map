@@ -649,6 +649,204 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Already have an account? Sign In'**
   String get existingExplorer;
+
+  /// No description provided for @myDrafts.
+  ///
+  /// In en, this message translates to:
+  /// **'My Drafts & Contributions'**
+  String get myDrafts;
+
+  /// No description provided for @savedPlacesRoutes.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved Places & Routes'**
+  String get savedPlacesRoutes;
+
+  /// No description provided for @editProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Profile'**
+  String get editProfile;
+
+  /// No description provided for @settings.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get settings;
+
+  /// No description provided for @searchArea.
+  ///
+  /// In en, this message translates to:
+  /// **'Search Area'**
+  String get searchArea;
+
+  /// No description provided for @recentComments.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent Comments'**
+  String get recentComments;
+
+  /// No description provided for @viewAllComments.
+  ///
+  /// In en, this message translates to:
+  /// **'View all comments'**
+  String get viewAllComments;
+
+  /// No description provided for @allComments.
+  ///
+  /// In en, this message translates to:
+  /// **'All Comments'**
+  String get allComments;
+
+  /// No description provided for @comments.
+  ///
+  /// In en, this message translates to:
+  /// **'comments'**
+  String get comments;
+
+  /// No description provided for @removeBookmark.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove Bookmark'**
+  String get removeBookmark;
+
+  /// No description provided for @removeBookmarkConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Do you want to remove this place from your saved places?'**
+  String get removeBookmarkConfirm;
+
+  /// No description provided for @remove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get remove;
+
+  /// No description provided for @unknownPlace.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown Place'**
+  String get unknownPlace;
+
+  /// No description provided for @noContributions.
+  ///
+  /// In en, this message translates to:
+  /// **'No contributions yet'**
+  String get noContributions;
+
+  /// No description provided for @noSavedPlaces.
+  ///
+  /// In en, this message translates to:
+  /// **'No saved places yet'**
+  String get noSavedPlaces;
+
+  /// No description provided for @name.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get name;
+
+  /// No description provided for @bio.
+  ///
+  /// In en, this message translates to:
+  /// **'Bio'**
+  String get bio;
+
+  /// No description provided for @changeAvatar.
+  ///
+  /// In en, this message translates to:
+  /// **'Change Avatar'**
+  String get changeAvatar;
+
+  /// No description provided for @save.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get save;
+
+  /// No description provided for @level.
+  ///
+  /// In en, this message translates to:
+  /// **'Level'**
+  String get level;
+
+  /// No description provided for @noviceExplorer.
+  ///
+  /// In en, this message translates to:
+  /// **'Novice Explorer'**
+  String get noviceExplorer;
+
+  /// No description provided for @apprenticeExplorer.
+  ///
+  /// In en, this message translates to:
+  /// **'Apprentice Explorer'**
+  String get apprenticeExplorer;
+
+  /// No description provided for @journeymanExplorer.
+  ///
+  /// In en, this message translates to:
+  /// **'Journeyman Explorer'**
+  String get journeymanExplorer;
+
+  /// No description provided for @expertExplorer.
+  ///
+  /// In en, this message translates to:
+  /// **'Expert Explorer'**
+  String get expertExplorer;
+
+  /// No description provided for @masterExplorer.
+  ///
+  /// In en, this message translates to:
+  /// **'Master Explorer'**
+  String get masterExplorer;
+
+  /// No description provided for @legendaryChronicler.
+  ///
+  /// In en, this message translates to:
+  /// **'Legendary Chronicler'**
+  String get legendaryChronicler;
+
+  /// No description provided for @rateExperience.
+  ///
+  /// In en, this message translates to:
+  /// **'Rate your experience'**
+  String get rateExperience;
+
+  /// No description provided for @rating.
+  ///
+  /// In en, this message translates to:
+  /// **'Rating'**
+  String get rating;
+
+  /// No description provided for @writeComment.
+  ///
+  /// In en, this message translates to:
+  /// **'Write your comment (optional)'**
+  String get writeComment;
+
+  /// No description provided for @submit.
+  ///
+  /// In en, this message translates to:
+  /// **'Submit'**
+  String get submit;
+
+  /// No description provided for @ratingSubmitted.
+  ///
+  /// In en, this message translates to:
+  /// **'Rating submitted successfully!'**
+  String get ratingSubmitted;
+
+  /// No description provided for @ratingFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to submit rating'**
+  String get ratingFailed;
+
+  /// No description provided for @close.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get close;
 }
 
 class _AppLocalizationsDelegate

@@ -311,4 +311,104 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get existingExplorer => 'Already have an account? Sign In';
+
+  @override
+  String get myDrafts => 'My Drafts & Contributions';
+
+  @override
+  String get savedPlacesRoutes => 'Saved Places & Routes';
+
+  @override
+  String get editProfile => 'Edit Profile';
+
+  @override
+  String get settings => 'Settings';
+
+  @override
+  String get searchArea => 'Search Area';
+
+  @override
+  String get recentComments => 'Recent Comments';
+
+  @override
+  String get viewAllComments => 'View all comments';
+
+  @override
+  String get allComments => 'All Comments';
+
+  @override
+  String get comments => 'comments';
+
+  @override
+  String get removeBookmark => 'Remove Bookmark';
+
+  @override
+  String get removeBookmarkConfirm =>
+      'Do you want to remove this place from your saved places?';
+
+  @override
+  String get remove => 'Remove';
+
+  @override
+  String get unknownPlace => 'Unknown Place';
+
+  @override
+  String get noContributions => 'No contributions yet';
+
+  @override
+  String get noSavedPlaces => 'No saved places yet';
+
+  @override
+  String get name => 'Name';
+
+  @override
+  String get bio => 'Bio';
+
+  @override
+  String get changeAvatar => 'Change Avatar';
+
+  @override
+  String get save => 'Save';
+
+  @override
+  String get level => 'Level';
+
+  @override
+  String get noviceExplorer => 'Novice Explorer';
+
+  @override
+  String get apprenticeExplorer => 'Apprentice Explorer';
+
+  @override
+  String get journeymanExplorer => 'Journeyman Explorer';
+
+  @override
+  String get expertExplorer => 'Expert Explorer';
+
+  @override
+  String get masterExplorer => 'Master Explorer';
+
+  @override
+  String get legendaryChronicler => 'Legendary Chronicler';
+
+  @override
+  String get rateExperience => 'Rate your experience';
+
+  @override
+  String get rating => 'Rating';
+
+  @override
+  String get writeComment => 'Write your comment (optional)';
+
+  @override
+  String get submit => 'Submit';
+
+  @override
+  String get ratingSubmitted => 'Rating submitted successfully!';
+
+  @override
+  String get ratingFailed => 'Failed to submit rating';
+
+  @override
+  String get close => 'Close';
 }
