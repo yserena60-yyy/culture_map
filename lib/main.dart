@@ -2824,8 +2824,8 @@ class _MapPageState extends State<MapPage> {
         // Bottom card (time slider or route tour)
         Positioned(
           bottom: 24,
-          left: 16,
-          right: 16,
+          left: 12,
+          right: 12,
           child: _isCreatingRoute
               ? const SizedBox.shrink()
               : (_activeRoute != null
