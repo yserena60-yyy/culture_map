@@ -176,6 +176,39 @@ class WikiPlace {
   });
 }
 
+IconData _iconForPlaceType(String? type) {
+  if (type == null) return Icons.account_balance;
+  final t = type.toLowerCase();
+  if (t.contains('school') || t.contains('university') || t.contains('college')) {
+    return Icons.school;
+  }
+  if (t.contains('church') || t.contains('cathedral') || t.contains('chapel') || t.contains('basilica')) {
+    return Icons.church;
+  }
+  if (t.contains('mosque')) return Icons.mosque;
+  if (t.contains('synagogue')) return Icons.synagogue;
+  if (t.contains('temple')) {
+    return t.contains('hindu') ? Icons.temple_hindu : Icons.temple_buddhist;
+  }
+  if (t.contains('museum')) return Icons.museum;
+  if (t.contains('castle')) return Icons.castle;
+  if (t.contains('fort')) return Icons.fort;
+  if (t.contains('palace') || t.contains('manor') || t.contains('villa')) return Icons.villa;
+  if (t.contains('theatre') || t.contains('theater') || t.contains('opera')) return Icons.theaters;
+  if (t.contains('library')) return Icons.local_library;
+  if (t.contains('stadium') || t.contains('arena')) return Icons.stadium;
+  if (t.contains('hospital')) return Icons.local_hospital;
+  if (t.contains('station') || t.contains('railway')) return Icons.train;
+  if (t.contains('market') || t.contains('shop') || t.contains('store')) return Icons.storefront;
+  if (t.contains('park') || t.contains('garden')) return Icons.park;
+  if (t.contains('bridge')) return Icons.architecture;
+  if (t.contains('tower') || t.contains('lighthouse')) return Icons.location_city;
+  if (t.contains('monument') || t.contains('memorial') || t.contains('statue')) return Icons.flag;
+  if (t.contains('house') || t.contains('residence') || t.contains('cottage')) return Icons.house;
+  if (t.contains('apartment') || t.contains('building')) return Icons.apartment;
+  return Icons.account_balance;
+}
+
 // =====================================================================
 // Route models
 // =====================================================================
@@ -1276,7 +1309,7 @@ class _MapPageState extends State<MapPage> {
     setState(() => _loadingWiki = true);
     try {
       final sparqlQuery = '''
-        SELECT ?place ?placeLabel ?coords ?inception ?article ?distance ?sitelinks ?image ?description WHERE {
+        SELECT ?place ?placeLabel ?coords ?inception ?article ?distance ?sitelinks ?image ?description ?instanceLabel WHERE {
           SERVICE wikibase:around {
             ?place wdt:P625 ?coords .
             bd:serviceParam wikibase:center "Point(${center.longitude} ${center.latitude})"^^geo:wktLiteral .
@@ -1285,6 +1318,11 @@ class _MapPageState extends State<MapPage> {
           }
           ?place wdt:P571 ?inception .
           OPTIONAL { ?place wikibase:sitelinks ?sitelinks . }
+          OPTIONAL {
+            SELECT ?place (SAMPLE(?type) AS ?instance) WHERE {
+              ?place wdt:P31 ?type .
+            } GROUP BY ?place
+          }
           OPTIONAL { ?place wdt:P18 ?image . }
           OPTIONAL { ?place schema:description ?description . FILTER(LANG(?description) = "en" || LANG(?description) = "zh") }
           OPTIONAL {
@@ -1377,9 +1415,12 @@ class _MapPageState extends State<MapPage> {
           }
         }
 
+        final instanceLabel = item['instanceLabel']?['value'];
+
         places.add(WikiPlace(
           entityId: entityId,
           title: title,
+          type: instanceLabel,
           lat: lat,
           lng: lng,
           numericYear: numericYear,
@@ -2293,7 +2334,7 @@ class _MapPageState extends State<MapPage> {
                           ),
                         ],
                       ),
-                      child: const Icon(Icons.account_balance,
+                      child: Icon(_iconForPlaceType(p.type),
                           size: 14, color: Colors.white),
                     ),
                     Container(
