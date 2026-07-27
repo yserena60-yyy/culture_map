@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'solitude_explorer_theme.dart';
-import 'navigation_page.dart';
 
 class SavedPlacesPage extends StatefulWidget {
   const SavedPlacesPage({super.key});
@@ -364,16 +364,10 @@ class _SavedPlacesPageState extends State<SavedPlacesPage> {
                   child: ElevatedButton.icon(
                     onPressed: (lat != null && lng != null)
                         ? () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => NavigationPage(
-                                  destinationName: placeName,
-                                  destinationLat: lat,
-                                  destinationLng: lng,
-                                ),
-                              ),
+                            final url = Uri.parse(
+                              'https://www.google.com/maps/dir/?api=1&destination=$lat,$lng',
                             );
+                            launchUrl(url, mode: LaunchMode.externalApplication);
                           }
                         : null,
                     style: ElevatedButton.styleFrom(
@@ -385,9 +379,9 @@ class _SavedPlacesPageState extends State<SavedPlacesPage> {
                       ),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
-                    icon: const Icon(Icons.navigation, size: 16),
+                    icon: const Icon(Icons.open_in_new, size: 16),
                     label: Text(
-                      'Navigate',
+                      'Open in Google Maps',
                       style: GoogleFonts.crimsonText(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
