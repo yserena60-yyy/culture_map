@@ -7,6 +7,7 @@ import 'solitude_explorer_theme.dart';
 import 'personal_info_page.dart';
 import 'privacy_security_page.dart';
 import 'language_settings_page.dart';
+import 'locale_controller.dart';
 import 'about_page.dart';
 import 'help_feedback_page.dart';
 import 'help_feedback_page_new.dart';
@@ -142,14 +143,19 @@ class _SettingsPageState extends State<SettingsPage> {
               },
             ),
             _buildDivider(),
-            _buildSettingsTile(
-              icon: Icons.language_outlined,
-              title: 'Language',
-              trailing: 'English',
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const LanguageSettingsPage()),
-              ),
+            ValueListenableBuilder<Locale?>(
+              valueListenable: localeController,
+              builder: (context, locale, _) {
+                return _buildSettingsTile(
+                  icon: Icons.language_outlined,
+                  title: 'Language',
+                  trailing: _languageLabel(locale),
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const LanguageSettingsPage()),
+                  ),
+                );
+              },
             ),
           ]),
           const SizedBox(height: 24),
@@ -227,6 +233,17 @@ class _SettingsPageState extends State<SettingsPage> {
       ),
       child: Column(children: children),
     );
+  }
+
+  String _languageLabel(Locale? locale) {
+    switch (locale?.languageCode) {
+      case 'en':
+        return 'English';
+      case 'zh':
+        return '中文';
+      default:
+        return 'System Default';
+    }
   }
 
   Widget _buildSettingsTile({

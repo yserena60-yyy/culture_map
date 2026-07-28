@@ -25,6 +25,7 @@ import 'settings_page.dart';
 import 'my_drafts_page.dart';
 import 'saved_places_page.dart';
 import 'edit_profile_page.dart';
+import 'locale_controller.dart';
 
 
 // =====================================================================
@@ -48,6 +49,8 @@ Future<void> main() async {
     url: supabaseUrl,
     publishableKey: supabaseKey,
   );
+
+  await localeController.load();
 
   runApp(const CultureMapApp());
 }
@@ -251,18 +254,24 @@ class CultureMapApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'CultureMap',
-      localizationsDelegates: const [
-        AppLocalizations.delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
-      supportedLocales: AppLocalizations.supportedLocales,
-      theme: SolitudeExplorerThemeData.themeData,
-      home: const ShellPage(),
+    return ValueListenableBuilder<Locale?>(
+      valueListenable: localeController,
+      builder: (context, locale, _) {
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          title: 'CultureMap',
+          locale: locale,
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: AppLocalizations.supportedLocales,
+          theme: SolitudeExplorerThemeData.themeData,
+          home: const ShellPage(),
+        );
+      },
     );
   }
 }
@@ -2017,7 +2026,7 @@ class _MapPageState extends State<MapPage> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(s.exploreRoutes,
-                    style: const TextStyle(
+                    style: GoogleFonts.notoSerifSc(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
                         color: SolitudeExplorerTheme.inkBlack)),
@@ -3783,9 +3792,10 @@ class _PassportPageViewState extends State<PassportPageView> {
         elevation: 0,
         title: Text(
           AppLocalizations.of(context)?.passportTitle ?? 'Explorer Hall',
-          style: const TextStyle(
+          style: GoogleFonts.notoSerifSc(
               color: SolitudeExplorerTheme.inkBlack,
-              fontWeight: FontWeight.bold),
+              fontWeight: FontWeight.bold,
+              fontSize: 18),
         ),
         centerTitle: false,
         actions: [
