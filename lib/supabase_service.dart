@@ -247,4 +247,59 @@ class SupabaseService {
       return [];
     }
   }
+
+  // Check-in system (route waypoints + per-stamp checkins)
+  Future<List<StampWaypoint>> fetchAllWaypoints() async {
+    try {
+      final response = await _client
+          .from('stamp_route_waypoints')
+          .select()
+          .order('step_order');
+      return (response as List)
+          .map((json) => StampWaypoint.fromJson(json as Map<String, dynamic>))
+          .toList();
+    } catch (e) {
+      print('Error fetching waypoints: $e');
+      return [];
+    }
+  }
+
+  Future<List<StampCheckin>> fetchUserCheckins() async {
+    final user = _client.auth.currentUser;
+    if (user == null) return [];
+
+    try {
+      final response = await _client
+          .from('stamp_checkins')
+          .select()
+          .eq('user_id', user.id);
+      return (response as List)
+          .map((json) => StampCheckin.fromJson(json as Map<String, dynamic>))
+          .toList();
+    } catch (e) {
+      print('Error fetching user checkins: $e');
+      return [];
+    }
+  }
+
+  Future<void> checkInToStamp({
+    required String stampId,
+    int waypointIndex = 0,
+    String? photoUrl,
+    String? note,
+    bool isBackfill = false,
+  }) async {
+    final user = _client.auth.currentUser;
+    if (user == null) throw Exception('User not authenticated');
+
+    await _client.from('stamp_checkins').upsert({
+      'stamp_id': stampId,
+      'user_id': user.id,
+      'waypoint_index': waypointIndex,
+      'photo_url': photoUrl,
+      'note': note,
+      'is_backfill': isBackfill,
+      'checked_in_at': DateTime.now().toIso8601String(),
+    });
+  }
 }

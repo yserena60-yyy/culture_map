@@ -132,6 +132,10 @@ class Stamp {
   final double angle;
   final Color color;
   final String? dateUnlocked;
+  final double? lat;
+  final double? lng;
+  final int totalSteps;
+  final int checkedInSteps;
 
   Stamp({
     this.id,
@@ -145,7 +149,13 @@ class Stamp {
     this.angle = 0.0,
     this.color = const Color(0xFF6B3636),
     this.dateUnlocked,
+    this.lat,
+    this.lng,
+    this.totalSteps = 1,
+    this.checkedInSteps = 0,
   });
+
+  bool get isRoute => type == 'route';
 
   factory Stamp.fromJson(Map<String, dynamic> json) {
     return Stamp(
@@ -162,6 +172,8 @@ class Stamp {
           ? Color(json['color'] as int)
           : const Color(0xFF6B3636),
       dateUnlocked: json['date_unlocked'] as String?,
+      lat: (json['lat'] as num?)?.toDouble(),
+      lng: (json['lng'] as num?)?.toDouble(),
     );
   }
 
@@ -178,6 +190,91 @@ class Stamp {
       'angle': angle,
       'color': color.value,
       if (dateUnlocked != null) 'date_unlocked': dateUnlocked,
+      if (lat != null) 'lat': lat,
+      if (lng != null) 'lng': lng,
     };
+  }
+
+  Stamp copyWith({
+    bool? isUnlocked,
+    String? dateUnlocked,
+    int? totalSteps,
+    int? checkedInSteps,
+  }) {
+    return Stamp(
+      id: id,
+      name: name,
+      region: region,
+      type: type,
+      imageUrl: imageUrl,
+      visitDate: visitDate,
+      isCollected: isCollected,
+      isUnlocked: isUnlocked ?? this.isUnlocked,
+      angle: angle,
+      color: color,
+      dateUnlocked: dateUnlocked ?? this.dateUnlocked,
+      lat: lat,
+      lng: lng,
+      totalSteps: totalSteps ?? this.totalSteps,
+      checkedInSteps: checkedInSteps ?? this.checkedInSteps,
+    );
+  }
+}
+
+class StampWaypoint {
+  final String stampId;
+  final int stepOrder;
+  final String name;
+  final double lat;
+  final double lng;
+
+  StampWaypoint({
+    required this.stampId,
+    required this.stepOrder,
+    required this.name,
+    required this.lat,
+    required this.lng,
+  });
+
+  factory StampWaypoint.fromJson(Map<String, dynamic> json) {
+    return StampWaypoint(
+      stampId: json['stamp_id'] as String,
+      stepOrder: json['step_order'] as int,
+      name: json['name'] as String,
+      lat: (json['lat'] as num).toDouble(),
+      lng: (json['lng'] as num).toDouble(),
+    );
+  }
+}
+
+class StampCheckin {
+  final String stampId;
+  final String userId;
+  final int waypointIndex;
+  final String? photoUrl;
+  final String? note;
+  final bool isBackfill;
+  final DateTime checkedInAt;
+
+  StampCheckin({
+    required this.stampId,
+    required this.userId,
+    required this.waypointIndex,
+    this.photoUrl,
+    this.note,
+    this.isBackfill = false,
+    required this.checkedInAt,
+  });
+
+  factory StampCheckin.fromJson(Map<String, dynamic> json) {
+    return StampCheckin(
+      stampId: json['stamp_id'] as String,
+      userId: json['user_id'] as String,
+      waypointIndex: json['waypoint_index'] as int? ?? 0,
+      photoUrl: json['photo_url'] as String?,
+      note: json['note'] as String?,
+      isBackfill: json['is_backfill'] as bool? ?? false,
+      checkedInAt: DateTime.parse(json['checked_in_at'] as String),
+    );
   }
 }

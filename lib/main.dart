@@ -12,6 +12,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'models.dart';
 import 'supabase_service.dart';
 import 'stamp_detail_sheet.dart';
+import 'check_in_sheet.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'landmark_detail_page.dart';
 import 'landmark_detail_page_new.dart';
@@ -1115,11 +1116,16 @@ class MapPage extends StatefulWidget {
 class _MapPageState extends State<MapPage> {
   final MapController _mapController = MapController();
   final TextEditingController _searchCtrl = TextEditingController();
+  final SupabaseService _supabaseService = SupabaseService();
 
   List<WikiPlace> _wikiPlaces = [];
   List<dynamic> _searchResults = [];
   bool _loadingWiki = false;
   bool _loadingSearch = false;
+
+  List<Stamp> _checkableStamps = [];
+  List<StampWaypoint> _checkableWaypoints = [];
+  Set<String> _checkedInKeys = {};
 
   RangeValues _yearRange = const RangeValues(-3000, 2026);
   final LatLng _initialCenter = const LatLng(41.8902, 12.4922);
@@ -1224,12 +1230,73 @@ class _MapPageState extends State<MapPage> {
   @override
   void initState() {
     super.initState();
+    _loadCheckableStamps();
   }
 
   @override
   void dispose() {
     _searchCtrl.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadCheckableStamps() async {
+    try {
+      final results = await Future.wait([
+        _supabaseService.fetchAllStamps(),
+        _supabaseService.fetchAllWaypoints(),
+        _supabaseService.fetchUserCheckins(),
+      ]);
+      final allStamps = results[0] as List<Map<String, dynamic>>;
+      final allWaypoints = results[1] as List<StampWaypoint>;
+      final userCheckins = results[2] as List<StampCheckin>;
+
+      final stamps = allStamps
+          .map((s) => Stamp(
+                id: s['id'] as String,
+                name: s['name'] as String,
+                region: s['region'] as String? ?? '',
+                type: s['type'] as String? ?? 'landmark',
+                imageUrl: s['image_url'] as String? ?? '',
+                visitDate: DateTime.now(),
+                lat: (s['lat'] as num?)?.toDouble(),
+                lng: (s['lng'] as num?)?.toDouble(),
+              ))
+          .toList();
+
+      if (!mounted) return;
+      setState(() {
+        _checkableStamps = stamps;
+        _checkableWaypoints = allWaypoints;
+        _checkedInKeys = userCheckins
+            .map((c) => '${c.stampId}:${c.waypointIndex}')
+            .toSet();
+      });
+    } catch (e) {
+      debugPrint('Error loading checkable stamps: $e');
+    }
+  }
+
+  void _openCheckInFromMap({
+    required String stampId,
+    required String placeName,
+    required int waypointIndex,
+    required LatLng location,
+  }) async {
+    final result = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => CheckInSheet(
+        stampId: stampId,
+        placeName: placeName,
+        targetLocation: location,
+        currentLocation: _currentLocation,
+        waypointIndex: waypointIndex,
+      ),
+    );
+    if (result == true) {
+      _loadCheckableStamps();
+    }
   }
 
   Future<void> _searchCity(String q) async {
@@ -2245,7 +2312,7 @@ class _MapPageState extends State<MapPage> {
   Widget _buildTimeDimensionCard() {
     final s = AppLocalizations.of(context)!;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
         color: SolitudeExplorerTheme.stainedPaper,
         borderRadius: BorderRadius.circular(20),
@@ -2258,6 +2325,7 @@ class _MapPageState extends State<MapPage> {
         ],
       ),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
@@ -2277,7 +2345,7 @@ class _MapPageState extends State<MapPage> {
               ),
               Container(
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                 decoration: BoxDecoration(
                   color: SolitudeExplorerTheme.compassGold.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(10),
@@ -2292,32 +2360,38 @@ class _MapPageState extends State<MapPage> {
               ),
             ],
           ),
-          const SizedBox(height: 8),
-          SliderTheme(
-            data: SliderTheme.of(context).copyWith(
-              trackHeight: 4,
-              activeTrackColor: SolitudeExplorerTheme.burgundyRed,
-              inactiveTrackColor: SolitudeExplorerTheme.stainedPaperVariant,
-              thumbColor: SolitudeExplorerTheme.burgundyRed,
-              overlayColor: SolitudeExplorerTheme.burgundyRed.withValues(alpha: 0.2),
-              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 10),
-              rangeThumbShape: const RoundRangeSliderThumbShape(enabledThumbRadius: 10),
-            ),
-            child: RangeSlider(
-              values: RangeValues(
-                _yearToSlider(_yearRange.start),
-                _yearToSlider(_yearRange.end),
+
+          const SizedBox(height: 2),
+
+          SizedBox(
+            height: 28,
+            child: SliderTheme(
+              data: SliderTheme.of(context).copyWith(
+                trackHeight: 4,
+                activeTrackColor: SolitudeExplorerTheme.burgundyRed,
+                inactiveTrackColor: SolitudeExplorerTheme.stainedPaperVariant,
+                thumbColor: SolitudeExplorerTheme.burgundyRed,
+                overlayColor: SolitudeExplorerTheme.burgundyRed.withValues(alpha: 0.2),
+                thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 10),
+                rangeThumbShape: const RoundRangeSliderThumbShape(enabledThumbRadius: 10),
+                overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),
               ),
-              min: 0.0,
-              max: 1.0,
-              onChanged: (RangeValues sliderValues) {
-                setState(() {
-                  _yearRange = RangeValues(
-                    _sliderToYear(sliderValues.start).roundToDouble(),
-                    _sliderToYear(sliderValues.end).roundToDouble(),
-                  );
-                });
-              },
+              child: RangeSlider(
+                values: RangeValues(
+                  _yearToSlider(_yearRange.start),
+                  _yearToSlider(_yearRange.end),
+                ),
+                min: 0.0,
+                max: 1.0,
+                onChanged: (RangeValues sliderValues) {
+                  setState(() {
+                    _yearRange = RangeValues(
+                      _sliderToYear(sliderValues.start).roundToDouble(),
+                      _sliderToYear(sliderValues.end).roundToDouble(),
+                    );
+                  });
+                },
+              ),
             ),
           ),
         ],
@@ -2416,6 +2490,92 @@ class _MapPageState extends State<MapPage> {
               ),
             ))
         .toList();
+
+    final List<Marker> checkableMarkers = [];
+    for (final stamp in _checkableStamps) {
+      if (stamp.isRoute) {
+        final waypoints = _checkableWaypoints
+            .where((w) => w.stampId == stamp.id)
+            .toList()
+          ..sort((a, b) => a.stepOrder.compareTo(b.stepOrder));
+        for (final w in waypoints) {
+          final isCheckedIn =
+              _checkedInKeys.contains('${stamp.id}:${w.stepOrder}');
+          checkableMarkers.add(Marker(
+            point: LatLng(w.lat, w.lng),
+            width: 34,
+            height: 34,
+            child: GestureDetector(
+              onTap: () => _openCheckInFromMap(
+                stampId: stamp.id!,
+                placeName: '${stamp.name} · ${w.name}',
+                waypointIndex: w.stepOrder,
+                location: LatLng(w.lat, w.lng),
+              ),
+              child: Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: isCheckedIn
+                      ? SolitudeExplorerTheme.compassGold
+                      : SolitudeExplorerTheme.stainedPaper,
+                  border: Border.all(
+                      color: SolitudeExplorerTheme.compassGold, width: 2),
+                  boxShadow: const [
+                    BoxShadow(color: Colors.black26, blurRadius: 3)
+                  ],
+                ),
+                child: Center(
+                  child: Icon(
+                    isCheckedIn ? Icons.check : Icons.flag_outlined,
+                    size: 16,
+                    color: isCheckedIn
+                        ? Colors.white
+                        : SolitudeExplorerTheme.compassGold,
+                  ),
+                ),
+              ),
+            ),
+          ));
+        }
+      } else if (stamp.lat != null && stamp.lng != null) {
+        final isCheckedIn = _checkedInKeys.contains('${stamp.id}:0');
+        checkableMarkers.add(Marker(
+          point: LatLng(stamp.lat!, stamp.lng!),
+          width: 40,
+          height: 40,
+          child: GestureDetector(
+            onTap: () => _openCheckInFromMap(
+              stampId: stamp.id!,
+              placeName: stamp.name,
+              waypointIndex: 0,
+              location: LatLng(stamp.lat!, stamp.lng!),
+            ),
+            child: Container(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: isCheckedIn
+                    ? SolitudeExplorerTheme.compassGold
+                    : SolitudeExplorerTheme.stainedPaper,
+                border: Border.all(
+                    color: SolitudeExplorerTheme.compassGold, width: 2.5),
+                boxShadow: const [
+                  BoxShadow(color: Colors.black26, blurRadius: 4)
+                ],
+              ),
+              child: Center(
+                child: Icon(
+                  isCheckedIn ? Icons.check_circle : Icons.stars_rounded,
+                  size: 18,
+                  color: isCheckedIn
+                      ? Colors.white
+                      : SolitudeExplorerTheme.compassGold,
+                ),
+              ),
+            ),
+          ),
+        ));
+      }
+    }
 
     final userLocationMarker = _currentLocation != null
         ? Marker(
@@ -2572,6 +2732,7 @@ class _MapPageState extends State<MapPage> {
               markers: [
                 ...filteredWikiMarkers,
                 ...filteredUserMarkers,
+                ...checkableMarkers,
                 if (userLocationMarker != null) userLocationMarker,
                 ...routeMarkers,
                 ...draftRouteMarkers,
@@ -3528,6 +3689,8 @@ class _PassportPageViewState extends State<PassportPageView> {
   List<Stamp> _europeStamps = [];
   List<Stamp> _globalStamps = [];
   List<Stamp> _routeStamps = [];
+  List<StampWaypoint> _allWaypoints = [];
+  List<StampCheckin> _userCheckins = [];
 
   @override
   void initState() {
@@ -3537,17 +3700,44 @@ class _PassportPageViewState extends State<PassportPageView> {
 
   Future<void> _loadStamps() async {
     try {
-      final allStamps = await _supabaseService.fetchAllStamps();
-      final userStamps = await _supabaseService.fetchUserStamps();
-      final unlockedIds = userStamps.map((u) => u['stamp_id'] as String).toSet();
+      final results = await Future.wait([
+        _supabaseService.fetchAllStamps(),
+        _supabaseService.fetchAllWaypoints(),
+        _supabaseService.fetchUserCheckins(),
+      ]);
+      final allStamps = results[0] as List<Map<String, dynamic>>;
+      final allWaypoints = results[1] as List<StampWaypoint>;
+      final userCheckins = results[2] as List<StampCheckin>;
+
+      final waypointsByStamp = <String, List<StampWaypoint>>{};
+      for (final w in allWaypoints) {
+        waypointsByStamp.putIfAbsent(w.stampId, () => []).add(w);
+      }
+      final checkinsByStamp = <String, List<StampCheckin>>{};
+      for (final c in userCheckins) {
+        checkinsByStamp.putIfAbsent(c.stampId, () => []).add(c);
+      }
 
       Stamp mapStamp(Map<String, dynamic> dbStamp) {
         final stampId = dbStamp['id'] as String;
-        final isUnlocked = unlockedIds.contains(stampId);
-        Map<String, dynamic>? userUnlock;
-        if (isUnlocked) {
-          userUnlock = userStamps.firstWhere((u) => u['stamp_id'] == stampId);
+        final waypoints = waypointsByStamp[stampId] ?? const [];
+        final totalSteps = waypoints.isNotEmpty ? waypoints.length : 1;
+        final stampCheckins = checkinsByStamp[stampId] ?? const [];
+        final checkedInIndices =
+            stampCheckins.map((c) => c.waypointIndex).toSet();
+        final checkedInSteps =
+            checkedInIndices.where((i) => i < totalSteps).length;
+        final isUnlocked = checkedInSteps >= totalSteps;
+
+        String? dateUnlocked;
+        if (isUnlocked && stampCheckins.isNotEmpty) {
+          final latest = stampCheckins
+              .map((c) => c.checkedInAt)
+              .reduce((a, b) => a.isAfter(b) ? a : b);
+          dateUnlocked =
+              "${latest.year}.${latest.month.toString().padLeft(2, '0')}.${latest.day.toString().padLeft(2, '0')}";
         }
+
         return Stamp(
           id: stampId,
           name: dbStamp['name'] as String,
@@ -3558,13 +3748,12 @@ class _PassportPageViewState extends State<PassportPageView> {
           isCollected: false,
           color: Color(int.tryParse((dbStamp['color_hex'] as String? ?? '#6B3636').replaceFirst('#', '0xFF')) ?? 0xFF6B3636),
           isUnlocked: isUnlocked,
-          dateUnlocked: userUnlock != null && userUnlock['unlocked_at'] != null
-              ? () {
-                  final dt = DateTime.parse(userUnlock!['unlocked_at'] as String);
-                  return "${dt.year}.${dt.month.toString().padLeft(2, '0')}.${dt.day.toString().padLeft(2, '0')}";
-                }()
-              : null,
+          dateUnlocked: dateUnlocked,
           angle: 0,
+          lat: (dbStamp['lat'] as num?)?.toDouble(),
+          lng: (dbStamp['lng'] as num?)?.toDouble(),
+          totalSteps: totalSteps,
+          checkedInSteps: checkedInSteps,
         );
       }
 
@@ -3575,6 +3764,8 @@ class _PassportPageViewState extends State<PassportPageView> {
             allStamps.where((s) => (s['category'] as String?) == 'global').map(mapStamp).toList();
         _routeStamps =
             allStamps.where((s) => (s['category'] as String?) == 'route').map(mapStamp).toList();
+        _allWaypoints = allWaypoints;
+        _userCheckins = userCheckins;
         _isLoading = false;
       });
     } catch (e) {
@@ -3704,12 +3895,20 @@ class _PassportPageViewState extends State<PassportPageView> {
   }
 
   void _showStampDetails(BuildContext context, Stamp stamp) {
+    final waypoints =
+        _allWaypoints.where((w) => w.stampId == stamp.id).toList();
+    final checkedInIndices = _userCheckins
+        .where((c) => c.stampId == stamp.id)
+        .map((c) => c.waypointIndex)
+        .toSet();
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => StampDetailSheet(
         stamp: stamp,
+        waypoints: waypoints,
+        checkedInIndices: checkedInIndices,
         supabaseService: _supabaseService,
         onUnlockSuccess: () => _loadStamps(),
       ),
@@ -3718,6 +3917,7 @@ class _PassportPageViewState extends State<PassportPageView> {
 
   Widget _buildCircularStamp(Stamp stamp) {
     if (!stamp.isUnlocked) {
+      final hasProgress = stamp.isRoute && stamp.checkedInSteps > 0;
       return GestureDetector(
         onTap: () => _showStampDetails(context, stamp),
         child: Column(
@@ -3732,7 +3932,11 @@ class _PassportPageViewState extends State<PassportPageView> {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: SolitudeExplorerTheme.stainedPaperDark,
-                    border: Border.all(color: SolitudeExplorerTheme.stainedPaperEdge, width: 1),
+                    border: Border.all(
+                        color: hasProgress
+                            ? SolitudeExplorerTheme.compassGold
+                            : SolitudeExplorerTheme.stainedPaperEdge,
+                        width: hasProgress ? 2 : 1),
                   ),
                   child: ClipOval(
                     child: ColorFiltered(
@@ -3767,6 +3971,25 @@ class _PassportPageViewState extends State<PassportPageView> {
                         color: Colors.white.withValues(alpha: 0.9), size: 28),
                   ),
                 ),
+                if (hasProgress)
+                  Positioned(
+                    bottom: -2,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: SolitudeExplorerTheme.stainedPaper,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: SolitudeExplorerTheme.compassGold, width: 1),
+                      ),
+                      child: Text(
+                        '${stamp.checkedInSteps}/${stamp.totalSteps}',
+                        style: TextStyle(
+                            color: SolitudeExplorerTheme.compassGoldDark,
+                            fontSize: 9,
+                            fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
               ],
             ),
             const SizedBox(height: 8),
